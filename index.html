@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="配達メーター">
+<title>配達メーター</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Noto+Sans+JP:wght@400;700;900&display=swap');
+
+:root {
+–bg: #0a0a0f;
+–panel: #111118;
+–panel2: #16161f;
+–border: #2a2a38;
+–accent: #00e5a0;
+–accent2: #00b8ff;
+–warn: #ff6b35;
+–text: #e8e8f0;
+–muted: #5a5a72;
+–uber: #06c167;
+–demae: #e8380d;
+–rocket: #0a84ff;
+}
+
+- { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+background: var(–bg);
+color: var(–text);
+font-family: ‘Noto Sans JP’, sans-serif;
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* ── HEADER ── */
+.header {
+background: var(–panel);
+border-bottom: 1px solid var(–border);
+padding: 14px 16px 10px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+.header-title {
+font-family: ‘Oswald’, sans-serif;
+font-size: 20px;
+font-weight: 700;
+letter-spacing: 2px;
+color: var(–accent);
+text-shadow: 0 0 18px rgba(0,229,160,0.5);
+}
+.header-date { font-size: 11px; color: var(–muted); }
+
+/* ── TABS ── */
+.tabs {
+display: flex;
+background: var(–panel);
+border-bottom: 1px solid var(–border);
+}
+.tab {
+flex: 1;
+padding: 10px 4px;
+text-align: center;
+font-size: 12px;
+font-weight: 700;
+color: var(–muted);
+cursor: pointer;
+border-bottom: 2px solid transparent;
+transition: all 0.2s;
+}
+.tab.active { color: var(–accent); border-bottom-color: var(–accent); }
+
+/* ── MAIN ── */
+.screen { display: none; padding: 16px; }
+.screen.active { display: block; }
+
+/* ── METER CARD ── */
+.meter-card {
+background: var(–panel);
+border: 1px solid var(–border);
+border-radius: 16px;
+overflow: hidden;
+margin-bottom: 12px;
+}
+.meter-row {
+display: flex;
+align-items: center;
+padding: 14px 16px;
+border-bottom: 1px solid var(–border);
+gap: 12px;
+}
+.meter-row:last-child { border-bottom: none; }
+.service-dot {
+width: 10px; height: 10px;
+border-radius: 50%;
+flex-shrink: 0;
+}
+.service-icon { font-size: 22px; flex-shrink: 0; }
+.service-name {
+font-size: 13px;
+font-weight: 700;
+flex: 1;
+letter-spacing: 0.5px;
+}
+.amount-display {
+font-family: ‘Oswald’, sans-serif;
+font-size: 26px;
+font-weight: 700;
+color: var(–accent);
+text-shadow: 0 0 12px rgba(0,229,160,0.4);
+min-width: 110px;
+text-align: right;
+cursor: pointer;
+}
+.amount-display.demae { color: var(–demae); text-shadow: 0 0 12px rgba(232,56,13,0.4); }
+.amount-display.rocket { color: var(–rocket); text-shadow: 0 0 12px rgba(10,132,255,0.4); }
+.btn-add {
+background: var(–border);
+border: none;
+border-radius: 8px;
+color: var(–text);
+font-size: 18px;
+width: 34px; height: 34px;
+cursor: pointer;
+flex-shrink: 0;
+display: flex; align-items: center; justify-content: center;
+transition: background 0.15s;
+}
+.btn-add:active { background: var(–accent); }
+
+/* ── TOTAL ── */
+.total-card {
+background: linear-gradient(135deg, #111820 0%, #0d1a14 100%);
+border: 1px solid var(–accent);
+border-radius: 16px;
+padding: 18px 20px;
+margin-bottom: 12px;
+box-shadow: 0 0 30px rgba(0,229,160,0.1);
+}
+.total-label {
+font-size: 11px;
+color: var(–muted);
+letter-spacing: 2px;
+text-transform: uppercase;
+margin-bottom: 4px;
+}
+.total-amount {
+font-family: ‘Oswald’, sans-serif;
+font-size: 48px;
+font-weight: 700;
+color: var(–accent);
+text-shadow: 0 0 30px rgba(0,229,160,0.6);
+line-height: 1;
+}
+.total-yen { font-size: 24px; margin-left: 4px; }
+
+/* ── TIMER ── */
+.timer-card {
+background: var(–panel2);
+border: 1px solid var(–border);
+border-radius: 16px;
+padding: 16px;
+margin-bottom: 12px;
+}
+.timer-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 12px;
+}
+.timer-label { font-size: 11px; color: var(–muted); letter-spacing: 2px; text-transform: uppercase; }
+.timer-status {
+font-size: 10px;
+font-weight: 700;
+padding: 3px 8px;
+border-radius: 20px;
+letter-spacing: 1px;
+}
+.timer-status.running { background: rgba(0,229,160,0.15); color: var(–accent); }
+.timer-status.paused { background: rgba(255,107,53,0.15); color: var(–warn); }
+.timer-status.stopped { background: rgba(90,90,114,0.2); color: var(–muted); }
+
+.timer-display {
+font-family: ‘Oswald’, sans-serif;
+font-size: 42px;
+font-weight: 600;
+color: var(–text);
+letter-spacing: 3px;
+text-align: center;
+margin-bottom: 4px;
+}
+.timer-sub {
+text-align: center;
+font-size: 11px;
+color: var(–muted);
+margin-bottom: 14px;
+}
+
+.hourly-display {
+background: var(–panel);
+border-radius: 10px;
+padding: 10px 14px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+margin-bottom: 12px;
+}
+.hourly-label { font-size: 12px; color: var(–muted); }
+.hourly-val {
+font-family: ‘Oswald’, sans-serif;
+font-size: 28px;
+font-weight: 700;
+color: var(–accent2);
+text-shadow: 0 0 15px rgba(0,184,255,0.5);
+}
+
+.btn-row { display: flex; gap: 8px; }
+.btn-timer {
+flex: 1;
+border: none;
+border-radius: 10px;
+padding: 12px 8px;
+font-family: ‘Noto Sans JP’, sans-serif;
+font-size: 13px;
+font-weight: 700;
+cursor: pointer;
+transition: all 0.15s;
+letter-spacing: 0.5px;
+}
+.btn-start { background: var(–accent); color: #000; }
+.btn-start:active { filter: brightness(0.85); }
+.btn-pause { background: var(–warn); color: #fff; }
+.btn-pause:active { filter: brightness(0.85); }
+.btn-stop { background: var(–border); color: var(–text); }
+.btn-stop:active { background: #333; }
+
+/* manual time override */
+.manual-time-section {
+margin-top: 12px;
+background: var(–panel);
+border-radius: 10px;
+padding: 12px 14px;
+}
+.manual-time-label { font-size: 11px; color: var(–muted); margin-bottom: 8px; }
+.manual-time-row { display: flex; gap: 8px; align-items: center; }
+.time-input {
+flex: 1;
+background: var(–bg);
+border: 1px solid var(–border);
+border-radius: 8px;
+color: var(–text);
+font-size: 15px;
+padding: 8px 10px;
+text-align: center;
+-webkit-appearance: none;
+}
+.time-input:focus { outline: none; border-color: var(–accent2); }
+.btn-calc {
+background: var(–accent2);
+color: #000;
+border: none;
+border-radius: 8px;
+padding: 8px 12px;
+font-weight: 700;
+font-size: 12px;
+cursor: pointer;
+white-space: nowrap;
+}
+.calc-result {
+margin-top: 8px;
+font-size: 12px;
+color: var(–accent2);
+text-align: center;
+font-family: ‘Oswald’, sans-serif;
+font-size: 16px;
+}
+
+/* ── RECORD BUTTON ── */
+.btn-record {
+width: 100%;
+background: linear-gradient(135deg, var(–accent) 0%, #00b87a 100%);
+color: #000;
+border: none;
+border-radius: 14px;
+padding: 16px;
+font-family: ‘Noto Sans JP’, sans-serif;
+font-size: 16px;
+font-weight: 900;
+cursor: pointer;
+letter-spacing: 1px;
+margin-top: 4px;
+box-shadow: 0 4px 20px rgba(0,229,160,0.3);
+transition: all 0.15s;
+}
+.btn-record:active { filter: brightness(0.85); transform: scale(0.98); }
+
+/* ── LOG SCREEN ── */
+.log-list { display: flex; flex-direction: column; gap: 10px; }
+.log-item {
+background: var(–panel);
+border: 1px solid var(–border);
+border-radius: 12px;
+padding: 14px 16px;
+}
+.log-item-header {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 8px;
+}
+.log-date { font-weight: 700; font-size: 14px; }
+.log-total {
+font-family: ‘Oswald’, sans-serif;
+font-size: 22px;
+color: var(–accent);
+}
+.log-details { font-size: 11px; color: var(–muted); line-height: 1.8; }
+.log-hourly { font-size: 12px; color: var(–accent2); margin-top: 4px; }
+.log-actions { display: flex; gap: 6px; margin-top: 10px; }
+.btn-log-edit, .btn-log-del {
+flex: 1;
+border: none;
+border-radius: 8px;
+padding: 7px;
+font-size: 12px;
+font-weight: 700;
+cursor: pointer;
+}
+.btn-log-edit { background: var(–border); color: var(–text); }
+.btn-log-del { background: rgba(255,107,53,0.15); color: var(–warn); }
+.empty-log { text-align: center; color: var(–muted); padding: 40px 20px; font-size: 14px; }
+
+/* ── MODAL ── */
+.modal-overlay {
+display: none;
+position: fixed; inset: 0;
+background: rgba(0,0,0,0.7);
+z-index: 100;
+align-items: center;
+justify-content: center;
+padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+background: var(–panel2);
+border: 1px solid var(–border);
+border-radius: 18px;
+padding: 20px;
+width: 100%;
+max-width: 360px;
+}
+.modal-title { font-size: 16px; font-weight: 900; margin-bottom: 16px; }
+.modal-field { margin-bottom: 12px; }
+.modal-label { font-size: 11px; color: var(–muted); margin-bottom: 5px; }
+.modal-input {
+width: 100%;
+background: var(–bg);
+border: 1px solid var(–border);
+border-radius: 8px;
+color: var(–text);
+font-size: 16px;
+padding: 10px 12px;
+-webkit-appearance: none;
+}
+.modal-input:focus { outline: none; border-color: var(–accent); }
+.modal-btns { display: flex; gap: 8px; margin-top: 16px; }
+.btn-modal-cancel { flex: 1; background: var(–border); color: var(–text); border: none; border-radius: 10px; padding: 12px; font-weight: 700; cursor: pointer; }
+.btn-modal-ok { flex: 2; background: var(–accent); color: #000; border: none; border-radius: 10px; padding: 12px; font-weight: 900; cursor: pointer; font-size: 14px; }
+
+/* ── INPUT AMOUNT MODAL ── */
+.delivery-input-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.quick-btn {
+background: var(–border);
+border: none;
+border-radius: 6px;
+color: var(–text);
+font-size: 12px;
+padding: 5px 10px;
+cursor: pointer;
+}
+.quick-btn:active { background: var(–accent); color: #000; }
+
+.pulse {
+animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+0%,100% { opacity: 1; }
+50% { opacity: 0.5; }
+}
+</style>
+
+</head>
+<body>
+
+<!-- HEADER -->
+
+<div class="header">
+  <div>
+    <div class="header-title">🚴 配達メーター</div>
+    <div class="header-date" id="headerDate"></div>
+  </div>
+</div>
+
+<!-- TABS -->
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('meter')">メーター</div>
+  <div class="tab" onclick="switchTab('log')">ログ</div>
+</div>
+
+<!-- METER SCREEN -->
+
+<div class="screen active" id="screen-meter">
+
+  <!-- Service amounts -->
+
+  <div class="meter-card">
+    <div class="meter-row">
+      <div class="service-dot" style="background:var(--uber)"></div>
+      <div class="service-icon">🐸</div>
+      <div class="service-name">Uber Eats</div>
+      <div class="amount-display" id="uberAmt" onclick="openAmountModal('uber')">¥0</div>
+      <button class="btn-add" onclick="openDeliveryAdd('uber')">+</button>
+    </div>
+    <div class="meter-row">
+      <div class="service-dot" style="background:var(--demae)"></div>
+      <div class="service-icon">🍅</div>
+      <div class="service-name">出前館</div>
+      <div class="amount-display demae" id="demaeAmt" onclick="openAmountModal('demae')">¥0</div>
+      <button class="btn-add" onclick="openDeliveryAdd('demae')">+</button>
+    </div>
+    <div class="meter-row">
+      <div class="service-dot" style="background:var(--rocket)"></div>
+      <div class="service-icon">🚀</div>
+      <div class="service-name">Rocket Now</div>
+      <div class="amount-display rocket" id="rocketAmt" onclick="openAmountModal('rocket')">¥0</div>
+      <button class="btn-add" onclick="openDeliveryAdd('rocket')">+</button>
+    </div>
+  </div>
+
+  <!-- Total -->
+
+  <div class="total-card">
+    <div class="total-label">合計金額</div>
+    <div class="total-amount"><span id="totalAmt">0</span><span class="total-yen">円</span></div>
+  </div>
+
+  <!-- Timer -->
+
+  <div class="timer-card">
+    <div class="timer-header">
+      <div class="timer-label">⏱ タイマー</div>
+      <div class="timer-status stopped" id="timerStatus">停止中</div>
+    </div>
+    <div class="timer-display" id="timerDisplay">00:00:00</div>
+    <div class="timer-sub" id="timerSub">スタートボタンで計測開始</div>
+
+```
+<div class="hourly-display">
+  <div class="hourly-label">現在の時給</div>
+  <div class="hourly-val"><span id="hourlyVal">——</span> <span style="font-size:14px;color:var(--muted)">円/h</span></div>
+</div>
+
+<div class="btn-row">
+  <button class="btn-timer btn-start" id="btnStart" onclick="startTimer()">▶ スタート</button>
+  <button class="btn-timer btn-pause" id="btnPause" onclick="pauseTimer()" style="display:none">⏸ 休憩</button>
+  <button class="btn-timer btn-stop" id="btnStop" onclick="stopTimer()" style="display:none">■ 終了</button>
+</div>
+
+<!-- Manual time calc -->
+<div class="manual-time-section">
+  <div class="manual-time-label">📐 任意の時刻までの時給を計算</div>
+  <div class="manual-time-row">
+    <input type="time" class="time-input" id="manualEndTime" placeholder="終了時刻">
+    <button class="btn-calc" onclick="calcManualHourly()">計算</button>
+  </div>
+  <div class="calc-result" id="calcResult"></div>
+</div>
+```
+
+  </div>
+
+  <!-- Record -->
+
+<button class="btn-record" onclick="recordToday()">📝 本日の稼働を記録する</button>
+
+</div>
+
+<!-- LOG SCREEN -->
+
+<div class="screen" id="screen-log">
+  <div class="log-list" id="logList"></div>
+</div>
+
+<!-- AMOUNT MODAL (set total manually) -->
+
+<div class="modal-overlay" id="amountModal">
+  <div class="modal">
+    <div class="modal-title" id="amountModalTitle">金額を設定</div>
+    <div class="modal-field">
+      <div class="modal-label">合計金額（円）</div>
+      <input type="number" inputmode="numeric" class="modal-input" id="amountInput" placeholder="0">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="closeModal('amountModal')">キャンセル</button>
+      <button class="btn-modal-ok" onclick="setAmount()">設定</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELIVERY ADD MODAL (add single delivery) -->
+
+<div class="modal-overlay" id="deliveryModal">
+  <div class="modal">
+    <div class="modal-title" id="deliveryModalTitle">配達報酬を追加</div>
+    <div class="modal-field">
+      <div class="modal-label">この配達の報酬（円）</div>
+      <input type="number" inputmode="numeric" class="modal-input" id="deliveryInput" placeholder="0">
+      <div class="delivery-input-btns">
+        <button class="quick-btn" onclick="addQuick(300)">+300</button>
+        <button class="quick-btn" onclick="addQuick(400)">+400</button>
+        <button class="quick-btn" onclick="addQuick(500)">+500</button>
+        <button class="quick-btn" onclick="addQuick(600)">+600</button>
+        <button class="quick-btn" onclick="addQuick(700)">+700</button>
+        <button class="quick-btn" onclick="addQuick(800)">+800</button>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="closeModal('deliveryModal')">キャンセル</button>
+      <button class="btn-modal-ok" onclick="addDelivery()">追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT LOG MODAL -->
+
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title">ログを編集</div>
+    <div class="modal-field">
+      <div class="modal-label">日付</div>
+      <input type="date" class="modal-input" id="editDate">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Uber Eats（円）</div>
+      <input type="number" inputmode="numeric" class="modal-input" id="editUber">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">出前館（円）</div>
+      <input type="number" inputmode="numeric" class="modal-input" id="editDemae">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Rocket Now（円）</div>
+      <input type="number" inputmode="numeric" class="modal-input" id="editRocket">
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">稼働時間（分）</div>
+      <input type="number" inputmode="numeric" class="modal-input" id="editMinutes">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="closeModal('editModal')">キャンセル</button>
+      <button class="btn-modal-ok" onclick="saveEdit()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+const state = {
+  uber: 0,
+  demae: 0,
+  rocket: 0,
+  timer: {
+    status: 'stopped', // stopped | running | paused
+    startTime: null,
+    elapsed: 0, // ms accumulated (excluding current run)
+    runStart: null, // when current run started
+  }
+};
+let currentService = null;
+let editingLogIndex = -1;
+let timerInterval = null;
+
+// ── STORAGE ──
+function saveLogs(logs) { localStorage.setItem('deliveryLogs', JSON.stringify(logs)); }
+function loadLogs() { return JSON.parse(localStorage.getItem('deliveryLogs') || '[]'); }
+function saveState() { localStorage.setItem('deliveryState', JSON.stringify(state)); }
+function loadState() {
+  const s = localStorage.getItem('deliveryState');
+  if (s) {
+    const loaded = JSON.parse(s);
+    Object.assign(state, loaded);
+    // If timer was running, fix runStart reference (it's a timestamp)
+    if (state.timer.status === 'running' && state.timer.runStart) {
+      // keep as-is (was saved as timestamp)
+    }
+  }
+}
+
+// ── INIT ──
+function init() {
+  loadState();
+  updateHeaderDate();
+  renderAmounts();
+  renderLog();
+  // Resume timer if it was running
+  if (state.timer.status === 'running') {
+    startTimerTick();
+    showTimerRunning();
+  } else if (state.timer.status === 'paused') {
+    showTimerPaused();
+  }
+  updateTimerDisplay();
+  updateHourly();
+}
+
+function updateHeaderDate() {
+  const now = new Date();
+  const days = ['日','月','火','水','木','金','土'];
+  document.getElementById('headerDate').textContent =
+    `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日（${days[now.getDay()]}）`;
+}
+
+// ── AMOUNTS ──
+function renderAmounts() {
+  document.getElementById('uberAmt').textContent = '¥' + state.uber.toLocaleString();
+  document.getElementById('demaeAmt').textContent = '¥' + state.demae.toLocaleString();
+  document.getElementById('rocketAmt').textContent = '¥' + state.rocket.toLocaleString();
+  const total = state.uber + state.demae + state.rocket;
+  document.getElementById('totalAmt').textContent = total.toLocaleString();
+  updateHourly();
+}
+
+function openAmountModal(service) {
+  currentService = service;
+  const names = {uber:'Uber Eats', demae:'出前館', rocket:'Rocket Now'};
+  document.getElementById('amountModalTitle').textContent = names[service] + ' 合計金額を設定';
+  document.getElementById('amountInput').value = state[service] || '';
+  document.getElementById('amountModal').classList.add('open');
+  setTimeout(() => document.getElementById('amountInput').focus(), 100);
+}
+
+function setAmount() {
+  const val = parseInt(document.getElementById('amountInput').value) || 0;
+  state[currentService] = val;
+  saveState();
+  renderAmounts();
+  closeModal('amountModal');
+}
+
+function openDeliveryAdd(service) {
+  currentService = service;
+  const names = {uber:'Uber Eats', demae:'出前館', rocket:'Rocket Now'};
+  document.getElementById('deliveryModalTitle').textContent = names[service] + ' — 配達を追加';
+  document.getElementById('deliveryInput').value = '';
+  document.getElementById('deliveryModal').classList.add('open');
+  setTimeout(() => document.getElementById('deliveryInput').focus(), 100);
+}
+
+function addQuick(amt) {
+  const cur = parseInt(document.getElementById('deliveryInput').value) || 0;
+  document.getElementById('deliveryInput').value = cur + amt;
+}
+
+function addDelivery() {
+  const val = parseInt(document.getElementById('deliveryInput').value) || 0;
+  state[currentService] += val;
+  saveState();
+  renderAmounts();
+  closeModal('deliveryModal');
+}
+
+// ── TIMER ──
+function getElapsedMs() {
+  let total = state.timer.elapsed;
+  if (state.timer.status === 'running' && state.timer.runStart) {
+    total += Date.now() - state.timer.runStart;
+  }
+  return total;
+}
+
+function formatTime(ms) {
+  const secs = Math.floor(ms / 1000);
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  return [h,m,s].map(v => String(v).padStart(2,'0')).join(':');
+}
+
+function updateTimerDisplay() {
+  const ms = getElapsedMs();
+  document.getElementById('timerDisplay').textContent = formatTime(ms);
+  const mins = Math.floor(ms / 60000);
+  if (mins > 0) {
+    const h = Math.floor(mins/60), m = mins%60;
+    document.getElementById('timerSub').textContent = `稼働時間: ${h}時間${m}分`;
+  } else {
+    document.getElementById('timerSub').textContent = state.timer.status === 'stopped'
+      ? 'スタートボタンで計測開始' : '計測中...';
+  }
+}
+
+function updateHourly() {
+  const ms = getElapsedMs();
+  const hours = ms / 3600000;
+  const total = state.uber + state.demae + state.rocket;
+  if (hours < 0.01 || total === 0) {
+    document.getElementById('hourlyVal').textContent = '——';
+  } else {
+    document.getElementById('hourlyVal').textContent = Math.round(total / hours).toLocaleString();
+  }
+}
+
+function startTimerTick() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    updateTimerDisplay();
+    updateHourly();
+  }, 10000); // update every 10s
+  // Also update immediately
+  updateTimerDisplay();
+  updateHourly();
+}
+
+function showTimerRunning() {
+  document.getElementById('btnStart').style.display = 'none';
+  document.getElementById('btnPause').style.display = '';
+  document.getElementById('btnStop').style.display = '';
+  const st = document.getElementById('timerStatus');
+  st.textContent = '稼働中';
+  st.className = 'timer-status running pulse';
+}
+
+function showTimerPaused() {
+  document.getElementById('btnStart').style.display = '';
+  document.getElementById('btnStart').textContent = '▶ 再開';
+  document.getElementById('btnPause').style.display = 'none';
+  document.getElementById('btnStop').style.display = '';
+  const st = document.getElementById('timerStatus');
+  st.textContent = '休憩中';
+  st.className = 'timer-status paused pulse';
+}
+
+function showTimerStopped() {
+  document.getElementById('btnStart').style.display = '';
+  document.getElementById('btnStart').textContent = '▶ スタート';
+  document.getElementById('btnPause').style.display = 'none';
+  document.getElementById('btnStop').style.display = 'none';
+  const st = document.getElementById('timerStatus');
+  st.textContent = '停止中';
+  st.className = 'timer-status stopped';
+}
+
+function startTimer() {
+  if (state.timer.status === 'stopped') {
+    state.timer.elapsed = 0;
+    state.timer.startTime = Date.now();
+  }
+  state.timer.status = 'running';
+  state.timer.runStart = Date.now();
+  saveState();
+  startTimerTick();
+  showTimerRunning();
+}
+
+function pauseTimer() {
+  if (state.timer.status !== 'running') return;
+  state.timer.elapsed += Date.now() - state.timer.runStart;
+  state.timer.runStart = null;
+  state.timer.status = 'paused';
+  clearInterval(timerInterval);
+  saveState();
+  updateTimerDisplay();
+  updateHourly();
+  showTimerPaused();
+}
+
+function stopTimer() {
+  if (state.timer.status === 'running') {
+    state.timer.elapsed += Date.now() - state.timer.runStart;
+  }
+  state.timer.runStart = null;
+  state.timer.status = 'stopped';
+  clearInterval(timerInterval);
+  saveState();
+  updateTimerDisplay();
+  updateHourly();
+  showTimerStopped();
+}
+
+function calcManualHourly() {
+  const timeVal = document.getElementById('manualEndTime').value;
+  if (!timeVal || state.timer.status === 'stopped' || !state.timer.startTime) {
+    document.getElementById('calcResult').textContent = '先にタイマーをスタートしてください';
+    return;
+  }
+  const now = new Date();
+  const [hh, mm] = timeVal.split(':').map(Number);
+  const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0);
+  const startDate = new Date(state.timer.startTime);
+  const totalMs = Math.max(endDate - startDate, 0);
+  const hours = totalMs / 3600000;
+  const total = state.uber + state.demae + state.rocket;
+  if (hours < 0.01) {
+    document.getElementById('calcResult').textContent = '終了時刻が開始より前です';
+    return;
+  }
+  const hourly = Math.round(total / hours);
+  document.getElementById('calcResult').textContent =
+    `${timeVal}まで → 時給 ${hourly.toLocaleString()}円/h (${Math.floor(totalMs/3600000)}h${Math.floor((totalMs%3600000)/60000)}m)`;
+}
+
+// ── RECORD ──
+function recordToday() {
+  const total = state.uber + state.demae + state.rocket;
+  if (total === 0 && getElapsedMs() === 0) {
+    alert('金額または稼働時間を入力してください');
+    return;
+  }
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const elapsedMin = Math.floor(getElapsedMs() / 60000);
+  const logs = loadLogs();
+  // Check if same date already exists → update
+  const existing = logs.findIndex(l => l.date === dateStr);
+  const entry = {
+    date: dateStr,
+    uber: state.uber,
+    demae: state.demae,
+    rocket: state.rocket,
+    total,
+    minutes: elapsedMin
+  };
+  if (existing >= 0) {
+    if (!confirm('同じ日の記録があります。上書きしますか？')) return;
+    logs[existing] = entry;
+  } else {
+    logs.unshift(entry);
+  }
+  saveLogs(logs);
+  // Reset
+  state.uber = 0; state.demae = 0; state.rocket = 0;
+  state.timer = { status:'stopped', startTime:null, elapsed:0, runStart:null };
+  clearInterval(timerInterval);
+  saveState();
+  renderAmounts();
+  updateTimerDisplay();
+  showTimerStopped();
+  renderLog();
+  alert('記録しました！');
+}
+
+// ── LOG ──
+function renderLog() {
+  const logs = loadLogs();
+  const container = document.getElementById('logList');
+  if (logs.length === 0) {
+    container.innerHTML = '<div class="empty-log">まだ記録がありません</div>';
+    return;
+  }
+  container.innerHTML = logs.map((log, i) => {
+    const hours = log.minutes ? (log.minutes / 60) : 0;
+    const hourly = hours > 0.01 ? Math.round(log.total / hours) : null;
+    const h = Math.floor(log.minutes / 60), m = log.minutes % 60;
+    return `
+    <div class="log-item">
+      <div class="log-item-header">
+        <div class="log-date">${formatDate(log.date)}</div>
+        <div class="log-total">¥${log.total.toLocaleString()}</div>
+      </div>
+      <div class="log-details">
+        🐸 Uber Eats: ¥${log.uber.toLocaleString()}　🍅 出前館: ¥${log.demae.toLocaleString()}　🚀 Rocket: ¥${log.rocket.toLocaleString()}<br>
+        ⏱ 稼働時間: ${h}時間${m}分
+      </div>
+      ${hourly ? `<div class="log-hourly">時給: ${hourly.toLocaleString()}円/h</div>` : ''}
+      <div class="log-actions">
+        <button class="btn-log-edit" onclick="openEdit(${i})">✏️ 編集</button>
+        <button class="btn-log-del" onclick="deleteLog(${i})">🗑 削除</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function formatDate(str) {
+  const [y,m,d] = str.split('-');
+  const days = ['日','月','火','水','木','金','土'];
+  const day = days[new Date(str).getDay()];
+  return `${y}年${parseInt(m)}月${parseInt(d)}日（${day}）`;
+}
+
+function openEdit(i) {
+  editingLogIndex = i;
+  const logs = loadLogs();
+  const log = logs[i];
+  document.getElementById('editDate').value = log.date;
+  document.getElementById('editUber').value = log.uber;
+  document.getElementById('editDemae').value = log.demae;
+  document.getElementById('editRocket').value = log.rocket;
+  document.getElementById('editMinutes').value = log.minutes;
+  document.getElementById('editModal').classList.add('open');
+}
+
+function saveEdit() {
+  const logs = loadLogs();
+  const uber = parseInt(document.getElementById('editUber').value) || 0;
+  const demae = parseInt(document.getElementById('editDemae').value) || 0;
+  const rocket = parseInt(document.getElementById('editRocket').value) || 0;
+  logs[editingLogIndex] = {
+    date: document.getElementById('editDate').value,
+    uber, demae, rocket,
+    total: uber + demae + rocket,
+    minutes: parseInt(document.getElementById('editMinutes').value) || 0
+  };
+  saveLogs(logs);
+  renderLog();
+  closeModal('editModal');
+}
+
+function deleteLog(i) {
+  if (!confirm('この記録を削除しますか？')) return;
+  const logs = loadLogs();
+  logs.splice(i, 1);
+  saveLogs(logs);
+  renderLog();
+}
+
+// ── UTILS ──
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', (tab === 'meter' && i===0) || (tab === 'log' && i===1));
+  });
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + tab).classList.add('active');
+  if (tab === 'log') renderLog();
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('open');
+  });
+});
+
+init();
+</script>
+
+</body>
+</html>
