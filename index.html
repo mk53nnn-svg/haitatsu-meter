@@ -7,9 +7,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="配達メーター">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0a0a0f">
 <title>配達メーター</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Noto+Sans+JP:wght@400;700;900&display=swap');
+
+html {
+background-color: #0a0a0f !important;
+}
 
 :root {
 –bg: #0a0a0f;
@@ -29,7 +35,8 @@
 - { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 body {
-background: var(–bg);
+background: var(–bg) !important;
+background-color: #0a0a0f !important;
 color: var(–text);
 font-family: ‘Noto Sans JP’, sans-serif;
 min-height: 100vh;
